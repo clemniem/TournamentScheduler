@@ -41,7 +41,7 @@ trait Service extends Protocols{
         (post & entity(as[TournamentRequest])) { tR =>
           implicit val timeout = Timeout(15.seconds)
           val ueberActor = system.actorOf(UeberActor.props)
-          val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameMode, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
+          val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameTime, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
           val teamList = toTeamList(tR.teams)
           val futureAnswer = ueberActor ? TeamsToMatches(teamList, tournamentMode)
           import akka.http.scaladsl.model.StatusCodes._
