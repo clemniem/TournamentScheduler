@@ -1,6 +1,6 @@
 package GamesBuilder
 
-import GamesBuilder.{Matches, TeamsToMatches}
+import GamesBuilder.{GameRounds, TeamsToMatches}
 import Master.{TournamentMode, Team}
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
@@ -18,14 +18,23 @@ class GamesBuilderTest extends TestKit(ActorSystem("testSys"))
   with StopSystemAfterAll {
 
   "An GameBuilder" must {
-    "get a Seq of Teams and return matches" in {
       val gameBuilder = system.actorOf(GamesBuilder.props, GamesBuilder.name)
-      val testTeams = List(Team(1,10),Team(2,9),Team(3,8),Team(4,12))
-      gameBuilder ! TeamsToMatches(testTeams,new TournamentMode())
+    "get a Seq of even Teams and return matches" in {
+      val testTeamsEven = List(Team(1,10),Team(2,9),Team(3,8),Team(4,12))
+      gameBuilder ! TeamsToMatches(testTeamsEven,new TournamentMode())
       expectMsgPF(20.seconds) {
-        case Matches(teams) =>
+        case GameRounds(teams) =>
           println(teams)
-          teams.size must be(6)
+          teams.flatten.size must be(6) // == number of total matches
+      }
+    }
+    "get a Seq of odd Teams and return matches" in {
+      val testTeamsOdd = List(Team(1,10),Team(2,9),Team(3,8),Team(4,12),Team(5,10),Team(6,12),Team(7,10))
+      gameBuilder ! TeamsToMatches(testTeamsOdd,new TournamentMode())
+      expectMsgPF(20.seconds) {
+        case GameRounds(teams) =>
+          println(teams)
+          teams.flatten.size must be(21) // == number of total matches
       }
     }
   }

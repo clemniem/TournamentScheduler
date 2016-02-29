@@ -9,12 +9,19 @@ import Master.Types.Strength
   */
 
 case class Team(val id: Int, val MeanStrength: Strength)
-case class TournamentMode(val startTime: Int = -1, val gameTime: Int = -1, val pauseTime: Int = -1,
-                          val fields: Int = -1, val gameMode: GameMode = GameMode.RoundRobin)
+case class TournamentMode(val startTime: String = "",
+                          val endTime: String = "",
+                          val gameTime: Int = 30,
+                          val pauseTime: Int = 5,
+                          val fields: Int = -1,
+                          val days: Int = 1,
+                          val gameMode: GameMode = GameMode.RoundRobin)
 //todo add days and number of pools
 
 object Types {
   type Strength = Int
+  type Game = (Team,Team)
+  type Rounds = List[List[Game]]
 }
 
 object GameMode extends Enumeration {
