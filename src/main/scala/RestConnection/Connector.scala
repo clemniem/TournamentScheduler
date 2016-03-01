@@ -41,7 +41,7 @@ trait Service extends Protocols{
         (post & entity(as[TournamentRequest])) { tR =>
           implicit val timeout = Timeout(15.seconds)
           val ueberActor = system.actorOf(UeberActor.props)
-          val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameMode, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
+          val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameTime, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
           val teamList = toTeamList(tR.teams)
           val futureAnswer = ueberActor ? TeamsToMatches(teamList, tournamentMode)
           import akka.http.scaladsl.model.StatusCodes._
@@ -58,7 +58,7 @@ trait Service extends Protocols{
   }
   def toTeamList(teams: List[String]): List[Team] = {
     val pattern = """\((.*)\)""".r
-    teams.filter(_.contains("Team")).zipWithIndex.map(tuple => Team(tuple._2, pattern.findAllIn(tuple._1).matchData.next.group(1).toInt, tuple._1))
+    teams.filter(_.contains("Team")).zipWithIndex.map(tuple => Team(tuple._2, pattern.findAllIn(tuple._1+1).matchData.next.group(1).toInt, tuple._1))
   }
 
 }
