@@ -1,7 +1,7 @@
 package GamesBuilder
 
 import GamesBuilder.{GameRounds, TeamsToMatches}
-import Master.Types.{Rounds}
+import Master.Types.{Round}
 import Master.{GameMode, TournamentMode, Team}
 import akka.actor.{Actor, Props}
 
@@ -14,17 +14,18 @@ object GamesBuilder {
   val props = Props(new GamesBuilder)
 
   case class TeamsToMatches(teams: List[Team], modus: TournamentMode)
-  case class GameRounds(rounds: Rounds)
+  case class GameRounds(rounds: List[Round])
 
 }
 
-class GamesBuilder extends Actor with RoundRobin {
+class GamesBuilder extends Actor with RoundRobin with Elimination {
 
   def receive: Receive = {
     case TeamsToMatches(teams, mode) => mode.gameMode match {
-      case GameMode.RoundRobin => sender ! GameRounds(roundRobin(teams))
+      case GameMode.RoundRobin  => sender ! GameRounds(roundsForRoundRobin(teams))
+      case GameMode.Elimination => sender ! GameRounds(roundsForElimination(teams))
       //todo implement pools and elimination
-      case _ => sender ! GameRounds(roundRobin(teams))
+      case _ => sender ! GameRounds(roundsForRoundRobin(teams))
     }
 
   }
@@ -33,7 +34,7 @@ class GamesBuilder extends Actor with RoundRobin {
 }
 
 trait RoundRobin {
-  def roundRobin(teamsOrig: List[Team]): Rounds = {
+  def roundsForRoundRobin(teamsOrig: List[Team]): List[Round] = {
     var games: List[(Team, Team)] = Nil
     var teams = teamsOrig
     if (teams.length % 2 == 0) {
@@ -44,7 +45,7 @@ trait RoundRobin {
         }
         teams = teams.head +: rotateLeft(teams.tail,1)
       }
-      games.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
+      (Stream.from(1)).zip(games).toList.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
     } else {
       for (t <- teams.indices) {
         for (i <- 1 to teams.length / 2){
@@ -52,7 +53,7 @@ trait RoundRobin {
         }
         teams = rotateLeft(teams,1)
       }
-      games.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
+      Stream.from(1).zip(games).toList.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
     }
   }
 
@@ -61,6 +62,29 @@ trait RoundRobin {
     val size = seq.size
     seq.drop(i % size) ++ seq.take(i % size)
   }
+}
+
+trait Elimination {
+  def roundsForElimination(teams:List[Team]): List[Round] = {
+    eliminationRecursive(seedForElimination(teams)) //todo implement
+  }
+
+  def seedForElimination(teams: List[Team]): List[Round] = {
+    val sortedTeams = teams.sortBy(_.MeanStrength).reverse
+    val flippedLowerHalf = sortedTeams.drop(teams.size/2).reverse
+    val games = Stream.from(1).zip(flippedLowerHalf.zip(sortedTeams)).toList
+
+  }
+
+
+  def eliminationRecursive(rounds:List[Round]): List[Round] = rounds match {
+    case seed :: Nil => Nil //create first W and L bracket
+    case wBracket :: lBracket :: seed :: Nil => Nil //create next Brackets
+    case wBracket :: lBracket :: pBracket :: rs => Nil // create next Brackets
+    case _ => Nil //ERROR
+  }
+
+
 }
 
 

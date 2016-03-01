@@ -20,8 +20,8 @@ case class TournamentMode(val startTime: String = "",
 
 object Types {
   type Strength = Int
-  type Game = (Team,Team)
-  type Rounds = List[List[Game]]
+  type Game = (Int,(Team,Team))
+  type Round = List[Game]
 }
 
 object GameMode extends Enumeration {

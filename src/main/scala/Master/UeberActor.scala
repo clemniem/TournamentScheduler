@@ -1,7 +1,7 @@
 package Master
 
 import GamesBuilder.GamesBuilder.{GameRounds, TeamsToMatches}
-import Master.Types.Rounds
+import Master.Types.Round
 import Master.UeberActor.{FinishedSchedule, MakeSchedule}
 import akka.actor.{ActorRef, Actor, Props}
 
@@ -12,7 +12,7 @@ object UeberActor{
   val name = "ueber-actor"
   def props = Props(new UeberActor)
 
-  case class MakeSchedule(rounds:Rounds,mode: TournamentMode)
+  case class MakeSchedule(rounds:List[Round], mode: TournamentMode)
   case class FinishedSchedule(slots: List[String])
 }
 
