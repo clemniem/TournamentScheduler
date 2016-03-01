@@ -34,7 +34,7 @@ class Scheduler extends Actor with Log2 {
     var acc = ""
     var results: List[String] ={
       acc = "Time,"
-      for (nr <- mode.fields) {
+      for (nr <- 1 to  mode.fields) {
       acc += s",Field $nr,"
     }
     acc :: Nil}

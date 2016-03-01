@@ -8,7 +8,7 @@ import Master.Types.Strength
   * needed Datatypes
   */
 
-case class Team(val id: Int, val MeanStrength: Strength, name: String)
+case class Team(val id: Int, val MeanStrength: Strength, name: String = "")
 case class TournamentMode(val startTime: String = "",
                           val endTime: String = "",
                           val gameTime: Int = 30,

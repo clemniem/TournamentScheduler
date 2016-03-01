@@ -28,7 +28,8 @@ class SchedulerRoundRobinTest extends TestKit(ActorSystem("testSys"))
       expectMsgPF(){
         case FinishedSchedule(slots) =>
           println(s"EVEN: $slots")
-          slots.head.split(",").size must be(7)
+          println(slots(2))
+          slots(2).split(",").size must be(9)
       }
     }
     "get a List of Rounds and return List of Slots ODD" in {
@@ -46,7 +47,7 @@ class SchedulerRoundRobinTest extends TestKit(ActorSystem("testSys"))
       expectMsgPF(){
         case FinishedSchedule(slots) =>
           println(s"ODD : $slots")
-          slots.head.split(",").size must be(7)
+          slots(2).split(",").size must be(9)
       }
     }
   }

@@ -1,9 +1,11 @@
 package GamesBuilder
 
 import GamesBuilder.{GameRounds, TeamsToMatches}
-import Master.Types.{Round}
+import Master.Types.{Game, Round}
 import Master.{GameMode, TournamentMode, Team}
 import akka.actor.{Actor, Props}
+
+import scala.collection.immutable.::
 
 
 /**
@@ -72,21 +74,75 @@ trait Elimination {
   def seedForElimination(teams: List[Team]): List[Round] = {
     val sortedTeams = teams.sortBy(_.MeanStrength).reverse
     val flippedLowerHalf = sortedTeams.drop(teams.size/2).reverse
-    val games = Stream.from(1).zip(flippedLowerHalf.zip(sortedTeams)).toList
-
+    val games = flippedLowerHalf.zip(sortedTeams)
+    Stream.from(1).zip((games.zipWithIndex.filter(_._2 % 2 == 0)
+      ++ games.zipWithIndex.filter(_._2 % 2 != 0)).map(_._1)).toList :: Nil
   }
 
 
   def eliminationRecursive(rounds:List[Round]): List[Round] = rounds match {
-    case seed :: Nil => Nil //create first W and L bracket
-    case wBracket :: lBracket :: seed :: Nil => Nil //create next Brackets
-    case wBracket :: lBracket :: pBracket :: rs => Nil // create next Brackets
+    case seed :: Nil => seed :: eliminationRecursive(getNextRound(rounds))
+    case wBracket :: lBracket :: Nil =>
+      wBracket :: lBracket :: eliminationRecursive(getNextRound(wBracket::lBracket :: Nil :: Nil))
+    case wBracket :: lBracket :: pBracket :: rs =>
+      wBracket:: lBracket :: pBracket :: eliminationRecursive(wBracket :: lBracket :: pBracket :: Nil)
     case _ => Nil //ERROR
   }
 
+  def getNextRound(rounds:List[Round]): List[Round] = rounds match {
+    case seed :: Nil =>
+      var wb:Round = Nil
+      var lb:Round = Nil
+      //getting list with two elements (= last node in tree)
+      for( lastNode@(g1::g2::rs) <- seed.map(_._1).grouped(2)){
+        wb ::= (g1+seed.size,(Team(-seed.size,0,s"W$g1"),Team(-seed.size,0,s"W$g2")))
+        lb ::= (g2+seed.size,(Team(-seed.size,0,s"L$g1"),Team(-seed.size,0,s"L$g2")))
+      }
+      wb.reverse :: lb.reverse :: Nil
+
+    case wBracket :: lBracket :: pBracket :: Nil =>
+      wBracket match {
+      case Nil => Nil
+      case games =>
+        val gameCount = -games.head._2._1.id
+        var wb:Round = Nil
+        var lb:Round = Nil
+        var pb:Round = Nil
+        //getting list with two elements (= last node in tree)
+        for( lastNode@(g1::g2::rs) <- wBracket.map(_._1).grouped(2)) {
+          wb ::= (g1+gameCount,   (Team(-gameCount, 0, s"W$g1"), Team(-gameCount, 0, s"W$g2")))
+          lb ::= (g1+1+gameCount, (Team(-gameCount, 0, s"L$g1"), Team(-gameCount, 0, s"W${g1+1}")))
+          lb ::= (g2+1+gameCount, (Team(-gameCount, 0, s"L$g2"), Team(-gameCount, 0, s"W${g2+1}")))
+        }
+        for (lastNode@(g1::g2::rs) <- lBracket.map(_._1).grouped(2)) {
+          pb ::= (g1+1+gameCount,(Team(-gameCount,0,s"L$g1"),Team(-gameCount,0,s"L$g2")))
+        }
+        wb.reverse :: lb.reverse :: pb.reverse :: Nil
+      }
+
+
+  }
 
 }
 
 
-//todo implement Elimination-Mode-trait
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //todo implement Pools-Mode-trait

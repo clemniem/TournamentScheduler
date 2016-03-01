@@ -49,8 +49,22 @@ class GamesBuilderTest extends TestKit(ActorSystem("testSys"))
 
     "calculate the team mean vector when inputting the team vectors" in {
       val underGameBuilder: TestActorRef[GamesBuilder] = TestActorRef(GamesBuilder.props)
-      val x = underGameBuilder.underlyingActor.seedForElimination(List(Team(1, 8, ""), Team(2, 4, ""), Team(3, 3, ""), Team(4, 7, ""),Team(5, 1, ""), Team(6, 5, ""), Team(3, 2, ""), Team(8, 6, "")))
-      println(x)
+      val testTeams16 = List(
+        Team(1, 8, ""), Team(2, 4, ""), Team(3, 3, ""), Team(4, 7, ""),
+        Team(5, 1, ""), Team(6, 5, ""), Team(3, 2, ""), Team(8, 6, ""),
+        Team(9, 9, ""), Team(10, 10, ""), Team(11, 11, ""), Team(12, 12, ""),
+        Team(13, 13, ""), Team(14, 14, ""), Team(15, 15, ""), Team(16, 15, ""))
+
+      val seed = underGameBuilder.underlyingActor.seedForElimination(testTeams16)
+      println(seed)
+      val firstRound = underGameBuilder.underlyingActor.getNextRound(List(List((1,(Team(5,1,""),Team(1,8,""))), (2,(Team(3,2,""),Team(4,7,""))), (3,(Team(3,3),Team(8,6))), (4,(Team(2,4),Team(6,5))))))
+      println(firstRound)
+      val secondRound = underGameBuilder.underlyingActor.getNextRound(List(
+        List((5,(Team(-4,0,"W1"),Team(-4,0,"W2"))), (7,(Team(-4,0,"W3"),Team(-4,0,"W4")))),
+        List((6,(Team(-4,0,"L1"),Team(-4,0,"L2"))), (8,(Team(-4,0,"L3"),Team(-4,0,"L4"))))))
+      println(secondRound)
+      val testSchedule = underGameBuilder.underlyingActor.roundsForElimination(testTeams16)
+      println(testSchedule)
     }
   }
 
