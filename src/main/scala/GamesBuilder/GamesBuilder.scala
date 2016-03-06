@@ -25,7 +25,7 @@ class GamesBuilder extends Actor with RoundRobin with Elimination {
   def receive: Receive = {
     case TeamsToMatches(teams, mode) => mode.gameMode match {
       case GameMode.RoundRobin  => sender ! GameRounds(roundsForRoundRobin(teams))
-      case GameMode.Elimination => sender ! GameRounds(roundsForElimination(teams))
+      case GameMode.Elimination => sender ! GameRounds(roundsForRoundRobin(teams))
       //todo implement pools and elimination
       case _ => sender ! GameRounds(roundsForRoundRobin(teams))
     }
