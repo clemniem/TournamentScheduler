@@ -68,19 +68,7 @@ trait RoundRobin {
   }
 }
 
-trait Elimination {
-
-  def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
-    var results:Round = Nil
-    for(game@(id,(team1,team2)) <- round.reverse) (team1.id,team2.id) match {
-      case (t1,t2) =>
-        if(t1 <= 0 && t2 <= 0) results ::= game
-        if(t1 <= 0 && t2 >  0) results ::= (id,(team1,team2.copy(name = teamNames(t2))))
-        if(t1 >  0 && t2 <= 0) results ::= (id,(team1.copy(name = teamNames(t1)),team2))
-        if(t1 >  0 && t2 >  0) results ::= (id,(team1.copy(name = teamNames(t1)),team2.copy(name = teamNames(t2))))
-    }
-    results
-  }
+trait Elimination extends RoundFormatter {
 
   def roundsForElimination(teams: List[Team]): List[Round] = teams.size match {
     case 4 =>
@@ -136,8 +124,7 @@ trait Elimination {
 }
 
 
-//todo implement Pools-Mode-trait
-trait Pools {
+trait RoundFormatter {
   //todo put outside trait
   def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
     var results:Round = Nil
@@ -150,6 +137,12 @@ trait Pools {
     }
     results
   }
+}
+
+
+//todo implement Pools-Mode-trait
+trait Pools extends RoundFormatter{
+
 
   def roundsForPools(teams: List[Team]): List[Round] = teams.size match {
     case 10 => ???
