@@ -64,7 +64,7 @@ trait FormatHelpers {
           case "" => s"Team ${t1.id}"
           case name => name
         }
-      }:${
+      }: ${
         t2.name match {
           case "" => s"Team ${t2.id}"
           case name => name
