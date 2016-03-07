@@ -100,8 +100,8 @@ trait Elimination extends RoundFormatter {
         ),
         List(
           (5,(Team(name = "L1"),Team(name = "L2"))),
-          (6,(Team(name = "L2"),Team(name = "L3"))),
-          (7,(Team(name = "L1"),Team(name = "L2"))),
+          (6,(Team(name = "L3"),Team(name = "L4"))),
+          (7,(Team(name = "W1"),Team(name = "W2"))),
           (8,(Team(name = "W3"),Team(name = "W4")))
         ),
         List(

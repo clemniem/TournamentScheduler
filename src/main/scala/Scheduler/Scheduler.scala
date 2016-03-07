@@ -47,6 +47,9 @@ class Scheduler extends Actor with Log2 with FormatHelpers{
       for (game@(gameId, (t1, t2)) <- slots) {
         acc += gameToString(game)
       }
+      for(empty <- 0 until mode.fields-slots.size){
+        acc += ",--- : ---,"
+      }
       time += mode.gameTime.minutes + mode.pauseTime.minutes
       results = acc :: results
     }
@@ -62,7 +65,7 @@ trait FormatHelpers {
       s",$gameId,${
         t1.name match {
           case "" => s"Team ${t1.id}"
-          case name => name
+          case name => name+"c2"
         }
       }: ${
         t2.name match {
@@ -73,9 +76,9 @@ trait FormatHelpers {
   }
 
   def initStringForTournament(mode: TournamentMode):String = {
-    var acc = "Time,,"
+    var acc = "Time,"
     for (nr <- 1 to mode.fields) {
-      acc += s",Field $nr ,"
+      acc += s",,Field $nr ,"
     }
     acc
   }
