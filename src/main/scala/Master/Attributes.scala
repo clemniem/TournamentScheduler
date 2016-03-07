@@ -1,14 +1,15 @@
 package Master
 
 import Master.GameMode.GameMode
+import Master.TeamState.TeamState
 import Master.Types.Strength
 
 
 /**
   * needed Datatypes
   */
-
-case class Team(val id: Int, val MeanStrength: Strength, name: String = "")
+case class Teem(val losses:Int, val lastGame:Int, val nextGame:Int, val state:TeamState)
+case class Team(val id: Int = -1, val MeanStrength: Strength = -1, name: String = "")
 case class TournamentMode(val startTime: String = "",
                           val endTime: String = "",
                           val gameTime: Int = 30,
@@ -22,6 +23,11 @@ object Types {
   type Strength = Int
   type Game = (Int,(Team,Team))
   type Round = List[Game]
+}
+
+object TeamState extends Enumeration {
+  type TeamState = Value
+  val Team, Winner, Looser, Place = Value
 }
 
 object GameMode extends Enumeration {

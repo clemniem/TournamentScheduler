@@ -46,7 +46,6 @@ class Scheduler extends Actor with Log2 {
     for (slots <- rounds.flatten.grouped(mode.fields)) {
       acc = s"${format.print(time)}-${format.print(time + mode.gameTime.minutes)},"
       for (game@(gameId, (t1, t2)) <- slots) {
-
         acc += s",$gameId,${
           t1.name match {
             case "" => s"Team ${t1.id}"

@@ -2,9 +2,10 @@ package GamesBuilder
 
 import GamesBuilder.{GameRounds, TeamsToMatches}
 import Master.Types.{Game, Round}
-import Master.{GameMode, TournamentMode, Team}
+import Master._
 import akka.actor.{Actor, Props}
 
+import scala.annotation.tailrec
 import scala.collection.immutable.::
 
 
@@ -16,6 +17,7 @@ object GamesBuilder {
   val props = Props(new GamesBuilder)
 
   case class TeamsToMatches(teams: List[Team], modus: TournamentMode)
+
   case class GameRounds(rounds: List[Round])
 
 }
@@ -24,8 +26,8 @@ class GamesBuilder extends Actor with RoundRobin with Elimination {
 
   def receive: Receive = {
     case TeamsToMatches(teams, mode) => mode.gameMode match {
-      case GameMode.RoundRobin  => sender ! GameRounds(roundsForRoundRobin(teams))
-      case GameMode.Elimination => sender ! GameRounds(roundsForRoundRobin(teams))
+      case GameMode.RoundRobin => sender ! GameRounds(roundsForRoundRobin(teams))
+      case GameMode.Elimination => sender ! GameRounds(roundsForElimination(teams))
       //todo implement pools and elimination
       case _ => sender ! GameRounds(roundsForRoundRobin(teams))
     }
@@ -45,17 +47,17 @@ trait RoundRobin {
         for (i <- 2 to teams.length / 2) {
           games ::=(teams(i), teams(teams.length + 1 - i))
         }
-        teams = teams.head +: rotateLeft(teams.tail,1)
+        teams = teams.head +: rotateLeft(teams.tail, 1)
       }
-      (Stream.from(1)).zip(games).toList.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
+      Stream.from(1).zip(games).toList.sliding(teamsOrig.size / 2, teamsOrig.size / 2).toList
     } else {
       for (t <- teams.indices) {
-        for (i <- 1 to teams.length / 2){
-          games ::= (teams(i), teams(teams.length - i))
+        for (i <- 1 to teams.length / 2) {
+          games ::=(teams(i), teams(teams.length - i))
         }
-        teams = rotateLeft(teams,1)
+        teams = rotateLeft(teams, 1)
       }
-      Stream.from(1).zip(games).toList.sliding(teamsOrig.size/2,teamsOrig.size/2).toList
+      Stream.from(1).zip(games).toList.sliding(teamsOrig.size / 2, teamsOrig.size / 2).toList
     }
   }
 
@@ -67,82 +69,91 @@ trait RoundRobin {
 }
 
 trait Elimination {
-  def roundsForElimination(teams:List[Team]): List[Round] = {
-    eliminationRecursive(seedForElimination(teams)) //todo implement
+
+  def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
+    var results:Round = Nil
+    for(game@(id,(team1,team2)) <- round.reverse) (team1.id,team2.id) match {
+      case (t1,t2) =>
+        if(t1 <= 0 && t2 <= 0) results ::= game
+        if(t1 <= 0 && t2 >  0) results ::= (id,(team1,team2.copy(name = teamNames(t2))))
+        if(t1 >  0 && t2 <= 0) results ::= (id,(team1.copy(name = teamNames(t1)),team2))
+        if(t1 >  0 && t2 >  0) results ::= (id,(team1.copy(name = teamNames(t1)),team2.copy(name = teamNames(t2))))
+    }
+    results
   }
 
-  def seedForElimination(teams: List[Team]): List[Round] = {
-    val sortedTeams = teams.sortBy(_.MeanStrength).reverse
-    val flippedLowerHalf = sortedTeams.drop(teams.size/2).reverse
-    val games = flippedLowerHalf.zip(sortedTeams)
-    Stream.from(1).zip((games.zipWithIndex.filter(_._2 % 2 == 0)
-      ++ games.zipWithIndex.filter(_._2 % 2 != 0)).map(_._1)).toList :: Nil
-  }
-
-
-  def eliminationRecursive(rounds:List[Round]): List[Round] = rounds match {
-    case seed :: Nil => seed :: eliminationRecursive(getNextRound(rounds))
-    case wBracket :: lBracket :: Nil =>
-      wBracket :: lBracket :: eliminationRecursive(getNextRound(wBracket::lBracket :: Nil :: Nil))
-    case wBracket :: lBracket :: pBracket :: rs =>
-      wBracket:: lBracket :: pBracket :: eliminationRecursive(wBracket :: lBracket :: pBracket :: Nil)
-    case _ => Nil //ERROR
-  }
-
-  def getNextRound(rounds:List[Round]): List[Round] = rounds match {
-    case seed :: Nil =>
-      var wb:Round = Nil
-      var lb:Round = Nil
-      //getting list with two elements (= last node in tree)
-      for( lastNode@(g1::g2::rs) <- seed.map(_._1).grouped(2)){
-        wb ::= (g1+seed.size,(Team(-seed.size,0,s"W$g1"),Team(-seed.size,0,s"W$g2")))
-        lb ::= (g2+seed.size,(Team(-seed.size,0,s"L$g1"),Team(-seed.size,0,s"L$g2")))
+  def roundsForElimination(teams: List[Team]): List[Round] = teams.size match {
+    case 4 =>
+      var results:List[Round] = Nil
+      val templateRounds4:List[Round] = List(
+        List(
+          (1,(Team(id = 1),Team(id = 3))),
+          (2,(Team(id = 2),Team(id = 4)))
+        ),
+        List(
+          (3,(Team(name = "L1"),Team(name = "L2"))),
+          (4,(Team(name = "W1"),Team(name = "W2")))
+        )
+      )
+      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.MeanStrength).map(_.name)).toVector
+      for(round <- templateRounds4.reverse){
+        results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
       }
-      wb.reverse :: lb.reverse :: Nil
+      results
 
-    case wBracket :: lBracket :: pBracket :: Nil =>
-      wBracket match {
-      case Nil => Nil
-      case games =>
-        val gameCount = -games.head._2._1.id
-        var wb:Round = Nil
-        var lb:Round = Nil
-        var pb:Round = Nil
-        //getting list with two elements (= last node in tree)
-        for( lastNode@(g1::g2::rs) <- wBracket.map(_._1).grouped(2)) {
-          wb ::= (g1+gameCount,   (Team(-gameCount, 0, s"W$g1"), Team(-gameCount, 0, s"W$g2")))
-          lb ::= (g1+1+gameCount, (Team(-gameCount, 0, s"L$g1"), Team(-gameCount, 0, s"W${g1+1}")))
-          lb ::= (g2+1+gameCount, (Team(-gameCount, 0, s"L$g2"), Team(-gameCount, 0, s"W${g2+1}")))
-        }
-        for (lastNode@(g1::g2::rs) <- lBracket.map(_._1).grouped(2)) {
-          pb ::= (g1+1+gameCount,(Team(-gameCount,0,s"L$g1"),Team(-gameCount,0,s"L$g2")))
-        }
-        wb.reverse :: lb.reverse :: pb.reverse :: Nil
+    case 8 =>
+      var results:List[Round] = Nil
+      val templateRounds4:List[Round] = List(
+        List(
+          (1,(Team(id = 1),Team(id = 8))),
+          (2,(Team(id = 3),Team(id = 6))),
+          (3,(Team(id = 2),Team(id = 7))),
+          (4,(Team(id = 4),Team(id = 5)))
+        ),
+        List(
+          (5,(Team(name = "L1"),Team(name = "L2"))),
+          (6,(Team(name = "L2"),Team(name = "L3"))),
+          (7,(Team(name = "L1"),Team(name = "L2"))),
+          (8,(Team(name = "W3"),Team(name = "W4")))
+        ),
+        List(
+          (9,(Team(name = "L5"),Team(name = "L6"))),
+          (10,(Team(name = "W5"),Team(name = "W6"))),
+          (11,(Team(name = "L7"),Team(name = "L8"))),
+          (12,(Team(name = "W7"),Team(name = "W8")))
+        )
+      )
+      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.MeanStrength).map(_.name)).toVector
+      for(round <- templateRounds4.reverse){
+        results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
       }
-
-
+      results
+    //case 16 => Nil
+    case _ => Nil
   }
-
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //todo implement Pools-Mode-trait
+trait Pools {
+  //todo put outside trait
+  def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
+    var results:Round = Nil
+    for(game@(id,(team1,team2)) <- round.reverse) (team1.id,team2.id) match {
+      case (t1,t2) =>
+        if(t1 <= 0 && t2 <= 0) results ::= game
+        if(t1 <= 0 && t2 >  0) results ::= (id,(team1,team2.copy(name = teamNames(t2))))
+        if(t1 >  0 && t2 <= 0) results ::= (id,(team1.copy(name = teamNames(t1)),team2))
+        if(t1 >  0 && t2 >  0) results ::= (id,(team1.copy(name = teamNames(t1)),team2.copy(name = teamNames(t2))))
+    }
+    results
+  }
+
+  def roundsForPools(teams: List[Team]): List[Round] = teams.size match {
+    case 10 => ???
+    case 12 => ???
+    case 16 => ???
+  }
+
+
+}

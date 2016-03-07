@@ -8,15 +8,18 @@ import akka.actor.{ActorRef, Actor, Props}
 /**
   * This is the UeberActor of the TournamentSchedule MicroService
   */
-object UeberActor{
+object UeberActor {
   val name = "ueber-actor"
+
   def props = Props(new UeberActor)
 
-  case class MakeSchedule(rounds:List[Round], mode: TournamentMode)
+  case class MakeSchedule(rounds: List[Round], mode: TournamentMode)
+
   case class FinishedSchedule(slots: List[String])
+
 }
 
-class UeberActor extends Actor{
+class UeberActor extends Actor {
   val gamesBuilder = context.actorOf(GamesBuilder.GamesBuilder.props)
   val scheduler = context.actorOf(Scheduler.Scheduler.props)
   var realSender: ActorRef = null
@@ -24,11 +27,14 @@ class UeberActor extends Actor{
   var tMode = new TournamentMode()
 
   def receive: Receive = {
-    case TeamsToMatches(teams,mode) =>
+    case TeamsToMatches(teams, mode) =>
       realSender = sender
       tMode = mode
-      gamesBuilder ! TeamsToMatches(teams,mode)
-    case GameRounds(rounds) => scheduler ! MakeSchedule(rounds,tMode)
+      gamesBuilder ! TeamsToMatches(teams, mode)
+    case GameRounds(rounds) => rounds match {
+      case Nil => realSender ! FinishedSchedule(Nil) //todo ERROR
+      case _ => scheduler ! MakeSchedule(rounds, tMode)
+    }
     case FinishedSchedule(slots) => realSender ! FinishedSchedule(slots)
   }
 
