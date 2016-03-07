@@ -59,9 +59,10 @@ trait Service extends Protocols{
   }
   def toTeamList(teams: List[String]): List[Team] = {
     val pattern = """\((.*)\)""".r
-    teams.filter(_.contains("Team")).zipWithIndex.map(tuple => Team(tuple._2, pattern.findAllIn(tuple._1+1).matchData.next.group(1).toInt, tuple._1))
+    //todo extract only team name
+    teams.filter(_.contains("Team")).zipWithIndex.map(tuple =>
+      Team(id = tuple._2+1, meanStrength = pattern.findAllIn(tuple._1).matchData.next.group(1).toInt, name = tuple._1))
   }
-
 }
 
 

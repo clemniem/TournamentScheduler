@@ -83,7 +83,7 @@ trait Elimination extends RoundFormatter {
           (4,(Team(name = "W1"),Team(name = "W2")))
         )
       )
-      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.MeanStrength).map(_.name)).toVector
+      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.meanStrength).map(_.name)).toVector
       for(round <- templateRounds4.reverse){
         results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
       }
@@ -111,7 +111,7 @@ trait Elimination extends RoundFormatter {
           (12,(Team(name = "W7"),Team(name = "W8")))
         )
       )
-      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.MeanStrength).map(_.name)).toVector
+      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.meanStrength).map(_.name)).toVector
       for(round <- templateRounds4.reverse){
         results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
       }
