@@ -22,14 +22,13 @@ object GamesBuilder {
 
 }
 
-class GamesBuilder extends Actor with RoundRobin with Elimination {
+class GamesBuilder extends Actor with RoundRobin with Elimination with Pools{
 
   def receive: Receive = {
     case TeamsToMatches(teams, mode) => mode.gameMode match {
-      case GameMode.RoundRobin => sender ! GameRounds(roundsForRoundRobin(teams))
+      case GameMode.RoundRobin => sender  ! GameRounds(roundsForRoundRobin(teams))
       case GameMode.Elimination => sender ! GameRounds(roundsForElimination(teams))
-      //todo implement pools and elimination
-      case _ => sender ! GameRounds(roundsForRoundRobin(teams))
+      case GameMode.Pools => sender ! GameRounds(roundsForPools(teams))
     }
 
   }
@@ -38,6 +37,8 @@ class GamesBuilder extends Actor with RoundRobin with Elimination {
 }
 
 trait RoundRobin {
+  //this algorithm implemented: http://nrich.maths.org/1443
+  //returns all pairings for RoundRobin as a List of Rounds for Odd and Even Teams
   def roundsForRoundRobin(teamsOrig: List[Team]): List[Round] = {
     var games: List[(Team, Team)] = Nil
     var teams = teamsOrig
@@ -61,7 +62,7 @@ trait RoundRobin {
     }
   }
 
-  //todo implement nice with good algorithm
+  //todo implement maybe more efficiently
   def rotateLeft[A](seq: List[A], i: Int): List[A] = {
     val size = seq.size
     seq.drop(i % size) ++ seq.take(i % size)
@@ -70,6 +71,7 @@ trait RoundRobin {
 
 trait Elimination extends RoundFormatter {
 
+  //hardcoded Rounds for Elimination Tournaments
   def roundsForElimination(teams: List[Team]): List[Round] = teams.size match {
     case 4 =>
       var results:List[Round] = Nil
@@ -105,7 +107,7 @@ trait Elimination extends RoundFormatter {
           (8,(Team(name = "W3"),Team(name = "W4")))
         ),
         List(
-          (9,(Team(name = "L5"),Team(name = "L6"))),
+          (9,(Team(name =  "L5"),Team(name = "L6"))),
           (10,(Team(name = "W5"),Team(name = "W6"))),
           (11,(Team(name = "L7"),Team(name = "L8"))),
           (12,(Team(name = "W7"),Team(name = "W8")))
@@ -116,6 +118,7 @@ trait Elimination extends RoundFormatter {
         results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
       }
       results
+    //Tod
     //case 16 => Nil
     case _ =>
       println("Unsupported number of Teams! Supported Teams (4,8)")
@@ -125,7 +128,6 @@ trait Elimination extends RoundFormatter {
 
 
 trait RoundFormatter {
-  //todo put outside trait
   def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
     var results:Round = Nil
     for(game@(id,(team1,team2)) <- round.reverse) (team1.id,team2.id) match {
@@ -142,12 +144,12 @@ trait RoundFormatter {
 
 //todo implement Pools-Mode-trait
 trait Pools extends RoundFormatter{
-
-
+  //hardcoded Rounds for Pool-Games Tournament
   def roundsForPools(teams: List[Team]): List[Round] = teams.size match {
-    case 10 => ???
-    case 12 => ???
-    case 16 => ???
+    case 8 =>  Nil
+    case 10 => Nil
+    case 12 => Nil
+    case 16 => Nil
   }
 
 
