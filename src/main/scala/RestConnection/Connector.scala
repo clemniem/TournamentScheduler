@@ -3,7 +3,7 @@ package RestConnection
 
 import GamesBuilder.GamesBuilder.TeamsToRounds
 import Master.{Team, GameMode, TournamentMode, UeberActor}
-import Master.UeberActor.FinishedSchedule
+import Master.UeberActor.{ErrorMessage, FinishedSchedule}
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -50,6 +50,7 @@ trait Service extends Protocols{
           complete {
             futureAnswer.map[ToResponseMarshallable]{
               case f @ FinishedSchedule(slots) => OK -> f.toJson
+              case ErrorMessage(msg) => BadRequest -> msg
               case any => BadRequest -> "sorry"
             }
           }
