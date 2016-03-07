@@ -126,6 +126,7 @@ trait Pools extends RoundFormatter {
     case 10 => Nil
     case 12 => Nil
     case 16 => Nil
+    case _ => Nil
   }
 }
 
