@@ -1,6 +1,6 @@
 package Master
 
-import GamesBuilder.GamesBuilder.{GameRounds, TeamsToMatches}
+import GamesBuilder.GamesBuilder.{GameRounds, TeamsToRounds}
 import Master.Types.Round
 import Master.UeberActor.{FinishedSchedule, MakeSchedule}
 import akka.actor.{ActorRef, Actor, Props}
@@ -27,10 +27,10 @@ class UeberActor extends Actor {
   var tMode = new TournamentMode()
 
   def receive: Receive = {
-    case TeamsToMatches(teams, mode) =>
+    case TeamsToRounds(teams, mode) =>
       realSender = sender
       tMode = mode
-      gamesBuilder ! TeamsToMatches(teams, mode)
+      gamesBuilder ! TeamsToRounds(teams, mode)
     case GameRounds(rounds) => rounds match {
       case Nil => realSender ! FinishedSchedule(Nil) //todo ERROR
       case _ => scheduler ! MakeSchedule(rounds, tMode)

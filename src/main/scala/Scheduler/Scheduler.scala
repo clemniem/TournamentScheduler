@@ -1,7 +1,7 @@
 package Scheduler
 
-import Master.{Team, GameMode, TournamentMode}
-import Master.Types.{Game, Slot, Round}
+import Master.{GameMode, TournamentMode}
+import Master.Types.{Game, Round}
 import Master.UeberActor.{FinishedSchedule, MakeSchedule}
 import akka.actor.{Actor, Props}
 import org.joda.time.DateTime
@@ -21,13 +21,7 @@ object Scheduler {
 class Scheduler extends Actor with Log2 with FormatHelpers{
 
   def receive: Receive = {
-    case MakeSchedule(rounds, mode) => mode.gameMode match {
-      case GameMode.RoundRobin => sender ! FinishedSchedule(roundsToSchedule(mode, rounds))
-      case GameMode.Elimination => sender ! FinishedSchedule(roundsToSchedule(mode, rounds))
-
-      //todo implement other Cases
-      case _ => sender ! FinishedSchedule(roundsToSchedule(mode, rounds))
-    }
+    case MakeSchedule(rounds, mode) =>  sender ! FinishedSchedule(roundsToSchedule(mode, rounds))
   }
 
   def roundsToSchedule(mode: TournamentMode, rounds: List[Round]): List[String] = {

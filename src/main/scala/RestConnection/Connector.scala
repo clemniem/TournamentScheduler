@@ -1,7 +1,7 @@
 package RestConnection
 
 
-import GamesBuilder.GamesBuilder.TeamsToMatches
+import GamesBuilder.GamesBuilder.TeamsToRounds
 import Master.{Team, GameMode, TournamentMode, UeberActor}
 import Master.UeberActor.FinishedSchedule
 import akka.actor.ActorSystem
@@ -44,7 +44,7 @@ trait Service extends Protocols{
           val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameTime, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
           val teamList = toTeamList(tR.teams)
           println(s"Teamlist after Regex: $teamList")
-          val futureAnswer = ueberActor ? TeamsToMatches(teamList, tournamentMode)
+          val futureAnswer = ueberActor ? TeamsToRounds(teamList, tournamentMode)
           import akka.http.scaladsl.model.StatusCodes._
           //todo try onSuccess
           complete {

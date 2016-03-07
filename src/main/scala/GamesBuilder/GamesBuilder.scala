@@ -1,6 +1,6 @@
 package GamesBuilder
 
-import GamesBuilder.{GameRounds, TeamsToMatches}
+import GamesBuilder.{GameRounds, TeamsToRounds}
 import Master.Types.{Game, Round}
 import Master._
 import akka.actor.{Actor, Props}
@@ -12,28 +12,24 @@ import scala.collection.immutable.::
 /**
   * This actor gets a Set of Teams and returns a Set of Games
   */
+
 object GamesBuilder {
   val name = "games-builder"
   val props = Props(new GamesBuilder)
 
-  case class TeamsToMatches(teams: List[Team], modus: TournamentMode)
-
+  case class TeamsToRounds(teams: List[Team], modus: TournamentMode)
   case class GameRounds(rounds: List[Round])
-
 }
 
-class GamesBuilder extends Actor with RoundRobin with Elimination with Pools{
+class GamesBuilder extends Actor with RoundRobin with Elimination with Pools {
 
   def receive: Receive = {
-    case TeamsToMatches(teams, mode) => mode.gameMode match {
-      case GameMode.RoundRobin => sender  ! GameRounds(roundsForRoundRobin(teams))
+    case TeamsToRounds(teams, mode) => mode.gameMode match {
+      case GameMode.RoundRobin => sender ! GameRounds(roundsForRoundRobin(teams))
       case GameMode.Elimination => sender ! GameRounds(roundsForElimination(teams))
       case GameMode.Pools => sender ! GameRounds(roundsForPools(teams))
     }
-
   }
-
-
 }
 
 trait RoundRobin {
@@ -70,55 +66,54 @@ trait RoundRobin {
 }
 
 trait Elimination extends RoundFormatter {
-
   //hardcoded Rounds for Elimination Tournaments
   def roundsForElimination(teams: List[Team]): List[Round] = teams.size match {
     case 4 =>
-      var results:List[Round] = Nil
-      val templateRounds4:List[Round] = List(
+      var results: List[Round] = Nil
+      val templateRounds4: List[Round] = List(
         List(
-          (1,(Team(id = 1),Team(id = 3))),
-          (2,(Team(id = 2),Team(id = 4)))
+          (1, (Team(id = 1), Team(id = 3))),
+          (2, (Team(id = 2), Team(id = 4)))
         ),
         List(
-          (3,(Team(name = "L1"),Team(name = "L2"))),
-          (4,(Team(name = "W1"),Team(name = "W2")))
+          (3, (Team(name = "L1"), Team(name = "L2"))),
+          (4, (Team(name = "W1"), Team(name = "W2")))
         )
       )
-      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.meanStrength).map(_.name)).toVector
-      for(round <- templateRounds4.reverse){
-        results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
+      val teamNamesByStrength = ("Dummy" :: teams.sortBy(t => t.meanStrength).map(_.name)).toVector
+      for (round <- templateRounds4.reverse) {
+        results ::= fillRoundsWithTeamNames(teamNamesByStrength, round)
       }
       results
 
     case 8 =>
-      var results:List[Round] = Nil
-      val templateRounds4:List[Round] = List(
+      var results: List[Round] = Nil
+      val templateRounds4: List[Round] = List(
         List(
-          (1,(Team(id = 1),Team(id = 8))),
-          (2,(Team(id = 3),Team(id = 6))),
-          (3,(Team(id = 2),Team(id = 7))),
-          (4,(Team(id = 4),Team(id = 5)))
+          (1, (Team(id = 1), Team(id = 8))),
+          (2, (Team(id = 3), Team(id = 6))),
+          (3, (Team(id = 2), Team(id = 7))),
+          (4, (Team(id = 4), Team(id = 5)))
         ),
         List(
-          (5,(Team(name = "L1"),Team(name = "L2"))),
-          (6,(Team(name = "L3"),Team(name = "L4"))),
-          (7,(Team(name = "W1"),Team(name = "W2"))),
-          (8,(Team(name = "W3"),Team(name = "W4")))
+          (5, (Team(name = "L1"), Team(name = "L2"))),
+          (6, (Team(name = "L3"), Team(name = "L4"))),
+          (7, (Team(name = "W1"), Team(name = "W2"))),
+          (8, (Team(name = "W3"), Team(name = "W4")))
         ),
         List(
-          (9,(Team(name =  "L5"),Team(name = "L6"))),
-          (10,(Team(name = "W5"),Team(name = "W6"))),
-          (11,(Team(name = "L7"),Team(name = "L8"))),
-          (12,(Team(name = "W7"),Team(name = "W8")))
+          (9, (Team(name = "L5"), Team(name = "L6"))),
+          (10, (Team(name = "W5"), Team(name = "W6"))),
+          (11, (Team(name = "L7"), Team(name = "L8"))),
+          (12, (Team(name = "W7"), Team(name = "W8")))
         )
       )
-      val teamNamesByStrength = ("Dummy"::teams.sortBy(t => t.meanStrength).map(_.name)).toVector
-      for(round <- templateRounds4.reverse){
-        results ::= fillRoundsWithTeamNames(teamNamesByStrength,round)
+      val teamNamesByStrength = ("Dummy" :: teams.sortBy(t => t.meanStrength).map(_.name)).toVector
+      for (round <- templateRounds4.reverse) {
+        results ::= fillRoundsWithTeamNames(teamNamesByStrength, round)
       }
       results
-    //Tod
+    //Todo
     //case 16 => Nil
     case _ =>
       println("Unsupported number of Teams! Supported Teams (4,8)")
@@ -126,31 +121,27 @@ trait Elimination extends RoundFormatter {
   }
 }
 
-
-trait RoundFormatter {
-  def fillRoundsWithTeamNames(teamNames:Vector[String], round: Round):Round = {
-    var results:Round = Nil
-    for(game@(id,(team1,team2)) <- round.reverse) (team1.id,team2.id) match {
-      case (t1,t2) =>
-        if(t1 <= 0 && t2 <= 0) results ::= game
-        if(t1 <= 0 && t2 >  0) results ::= (id,(team1,team2.copy(name = teamNames(t2))))
-        if(t1 >  0 && t2 <= 0) results ::= (id,(team1.copy(name = teamNames(t1)),team2))
-        if(t1 >  0 && t2 >  0) results ::= (id,(team1.copy(name = teamNames(t1)),team2.copy(name = teamNames(t2))))
-    }
-    results
-  }
-}
-
-
 //todo implement Pools-Mode-trait
-trait Pools extends RoundFormatter{
+trait Pools extends RoundFormatter {
   //hardcoded Rounds for Pool-Games Tournament
   def roundsForPools(teams: List[Team]): List[Round] = teams.size match {
-    case 8 =>  Nil
+    case 8 => Nil
     case 10 => Nil
     case 12 => Nil
     case 16 => Nil
   }
+}
 
-
+trait RoundFormatter {
+  def fillRoundsWithTeamNames(teamNames: Vector[String], round: Round): Round = {
+    var results: Round = Nil
+    for (game@(id, (team1, team2)) <- round.reverse) (team1.id, team2.id) match {
+      case (t1, t2) =>
+        if (t1 <= 0 && t2 <= 0) results ::= game
+        if (t1 <= 0 && t2 > 0) results ::=(id, (team1, team2.copy(name = teamNames(t2))))
+        if (t1 > 0 && t2 <= 0) results ::=(id, (team1.copy(name = teamNames(t1)), team2))
+        if (t1 > 0 && t2 > 0) results ::=(id, (team1.copy(name = teamNames(t1)), team2.copy(name = teamNames(t2))))
+    }
+    results
+  }
 }
