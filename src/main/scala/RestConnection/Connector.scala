@@ -43,6 +43,7 @@ trait Service extends Protocols{
           val ueberActor = system.actorOf(UeberActor.props)
           val tournamentMode = TournamentMode(tR.startTime, tR.endTime, tR.gameTime, tR.pauseTime, tR.fields, tR.days, GameMode(tR.gameMode))
           val teamList = toTeamList(tR.teams)
+          println(s"Teamlist after Regex: $teamList")
           val futureAnswer = ueberActor ? TeamsToMatches(teamList, tournamentMode)
           import akka.http.scaladsl.model.StatusCodes._
           //todo try onSuccess

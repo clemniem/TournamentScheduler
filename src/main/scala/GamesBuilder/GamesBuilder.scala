@@ -129,7 +129,9 @@ trait Elimination {
       }
       results
     //case 16 => Nil
-    case _ => Nil
+    case _ =>
+      println("Unsupported number of Teams! Supported Teams (4,8)")
+      Nil
   }
 }
 
