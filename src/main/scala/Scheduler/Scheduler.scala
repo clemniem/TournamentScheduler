@@ -85,7 +85,6 @@ trait FormatHelpers {
 
   def timeStringForSlot(time:DateTime,mode:TournamentMode) = {
     val format = DateTimeFormat.forPattern("hh:mm")
-
     s"${format.print(time)}-${format.print(time + mode.gameTime.minutes)},"
   }
 
