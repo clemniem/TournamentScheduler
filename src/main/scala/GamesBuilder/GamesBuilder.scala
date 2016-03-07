@@ -1,12 +1,9 @@
 package GamesBuilder
 
 import GamesBuilder.{GameRounds, TeamsToRounds}
-import Master.Types.{Game, Round}
+import Master.Types.{Round}
 import Master._
 import akka.actor.{Actor, Props}
-
-import scala.annotation.tailrec
-import scala.collection.immutable.::
 
 
 /**
