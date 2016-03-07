@@ -48,7 +48,7 @@ class Scheduler extends Actor with Log2 with FormatHelpers{
         acc += gameToString(game)
       }
       for(empty <- 0 until mode.fields-slots.size){
-        acc += ",--- : ---,"
+        acc += ",,--- : ---,"
       }
       time += mode.gameTime.minutes + mode.pauseTime.minutes
       results = acc :: results
@@ -65,7 +65,7 @@ trait FormatHelpers {
       s",$gameId,${
         t1.name match {
           case "" => s"Team ${t1.id}"
-          case name => name+"c2"
+          case name => name
         }
       }: ${
         t2.name match {
