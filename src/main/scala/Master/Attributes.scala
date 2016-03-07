@@ -9,7 +9,7 @@ import Master.Types.Strength
   * needed Datatypes
   */
 case class Teem(val losses:Int, val lastGame:Int, val nextGame:Int, val state:TeamState)
-case class Team(val id: Int = -1, val MeanStrength: Strength = -1, name: String = "")
+case class Team(val id: Int = -1, val meanStrength: Strength = -1, name: String = "")
 case class TournamentMode(val startTime: String = "",
                           val endTime: String = "",
                           val gameTime: Int = 30,
