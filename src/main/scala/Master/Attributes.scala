@@ -23,6 +23,7 @@ object Types {
   type Strength = Int
   type Game = (Int,(Team,Team))
   type Round = List[Game]
+  type Slot = String
 }
 
 object TeamState extends Enumeration {
