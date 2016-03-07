@@ -75,7 +75,7 @@ trait FormatHelpers {
   def initStringForTournament(mode: TournamentMode):String = {
     var acc = "Time,,"
     for (nr <- 1 to mode.fields) {
-      acc += s",Field $nr,"
+      acc += s",Field $nr ,"
     }
     acc
   }
