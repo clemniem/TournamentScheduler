@@ -74,7 +74,7 @@ class SchedulerRoundRobinTest extends TestKit(ActorSystem("testSys"))
           (12, (Team(name = "W7"), Team(name = "W8")))
         )
       )
-      val elimList = elimListTemplate.map(r => fillRoundsWithTeamNames(Vector(
+      val elimList = elimListTemplate.map(r => fillRoundWithTeamNames(Vector(
         "Dummy", "Strong","Second","Third","Fourth","Fifth","Sixth","seventh","eighth"),r))
       val mode = new TournamentMode("10:00","20:00",30,5,3,1,GameMode.Elimination)
       scheduler ! MakeSchedule(elimList,mode)
